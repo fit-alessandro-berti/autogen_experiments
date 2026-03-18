@@ -1,0 +1,1 @@
+Design a Python service that ingests PDFs, extracts text, chunks it, embeds it, and serves retrieval for an internal search app. The final answer should include: 1. proposed architecture 2. recommended Python libraries 3. key risks / failure modes 4. an MVP implementation plan.
