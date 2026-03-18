@@ -2,7 +2,7 @@
   "model_client": {
     "provider": "openai",
     "kwargs": {
-      "model": "gpt-5.4"
+      "model": "gpt-5"
     }
   },
   "team": {

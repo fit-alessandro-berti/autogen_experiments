@@ -23,6 +23,19 @@ Choose exactly one agent from {participants} to speak next.
 Prefer forward progress and avoid repetition.
 """
 
+FALLBACK_MODEL_INFO_BY_NAME: dict[str, dict[str, Any]] = {
+    # AutoGen's bundled model registry can lag behind newer model aliases.
+    # This keeps the example config working even before the dependency updates.
+    "gpt-5.4": {
+        "vision": True,
+        "function_calling": True,
+        "json_output": True,
+        "family": "gpt-5",
+        "structured_output": True,
+        "multiple_system_messages": True,
+    }
+}
+
 
 def load_json(path: str) -> dict[str, Any]:
     with open(path, "r", encoding="utf-8") as f:
@@ -56,7 +69,22 @@ def build_model_client(config: Mapping[str, Any]) -> OpenAIChatCompletionClient:
         )
     if "model" not in kwargs:
         raise ValueError("model_client.kwargs.model is required.")
-    return OpenAIChatCompletionClient(**kwargs)
+    if "model_info" not in kwargs:
+        fallback_model_info = FALLBACK_MODEL_INFO_BY_NAME.get(str(kwargs["model"]))
+        if fallback_model_info is not None:
+            kwargs["model_info"] = dict(fallback_model_info)
+
+    try:
+        return OpenAIChatCompletionClient(**kwargs)
+    except ValueError as err:
+        if "model_info is required when model name is not a valid OpenAI model" in str(err):
+            model = kwargs["model"]
+            raise ValueError(
+                f"Unknown model name {model!r} for this AutoGen version. "
+                "Use a supported OpenAI model name such as 'gpt-5', or set "
+                "'model_client.kwargs.model_info' in the JSON for custom or newer model names."
+            ) from err
+        raise
 
 
 def build_agents(config: Mapping[str, Any], model_client: OpenAIChatCompletionClient) -> list[AssistantAgent]:
