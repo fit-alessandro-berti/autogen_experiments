@@ -1,0 +1,57 @@
+{
+  "model_client": {
+    "provider": "openai",
+    "kwargs": {
+      "model": "gpt-5.4"
+    }
+  },
+  "team": {
+    "type": "selector",
+    "name": "GrokLikeDebate",
+    "description": "A role-based multi-agent team that discusses a task before producing a final answer.",
+    "max_turns": 10,
+    "allow_repeated_speaker": false,
+    "max_selector_attempts": 3,
+    "selector_prompt": "You are selecting the next speaker in a multi-agent discussion.\n\nAvailable roles:\n{roles}\n\nConversation so far:\n{history}\n\nChoose exactly one agent from {participants} to speak next.\n\nRules:\n- Planner should speak first.\n- Researcher should propose concrete solutions.\n- Critic should challenge assumptions and identify risks.\n- Writer should only speak when enough material exists for the final answer.\n- Prefer forward progress and avoid repetition."
+  },
+  "termination": {
+    "text_mention": "DONE",
+    "max_messages": 12
+  },
+  "final_answer": {
+    "source": "Writer",
+    "strip_mentions": [
+      "DONE"
+    ]
+  },
+  "outputs": {
+    "run_dir": "autogen_run",
+    "answer_path": "autogen_run/answer.txt",
+    "transcript_file": "transcript.jsonl",
+    "result_file": "task_result.json",
+    "state_file": "team_state.json"
+  },
+  "task": "Design a Python service that ingests PDFs, extracts text, chunks it, embeds it, and serves retrieval for an internal search app. The final answer should include: 1. proposed architecture 2. recommended Python libraries 3. key risks / failure modes 4. an MVP implementation plan.",
+  "agents": [
+    {
+      "name": "Planner",
+      "description": "Breaks the task into subtasks and coordinates the team.",
+      "system_message": "You are the Planner. Speak first. Break the task into concrete subtasks. Ask for what is missing. Do not produce the final answer yourself."
+    },
+    {
+      "name": "Researcher",
+      "description": "Suggests technical options, architecture, and Python libraries.",
+      "system_message": "You are the Researcher. Propose practical Python implementation choices. Be concrete about components, libraries, and tradeoffs. Do not produce the final answer."
+    },
+    {
+      "name": "Critic",
+      "description": "Finds weaknesses, missing assumptions, and operational risks.",
+      "system_message": "You are the Critic. Challenge weak assumptions. Look for edge cases, security issues, scaling limits, and observability gaps. Do not produce the final answer."
+    },
+    {
+      "name": "Writer",
+      "description": "Produces the final consolidated answer once the discussion is sufficient.",
+      "system_message": "You are the Writer. Only speak when the team has enough material. Produce a clean, structured final answer. End your final message with the exact token: DONE"
+    }
+  ]
+}
